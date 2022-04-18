@@ -1,0 +1,104 @@
+name: pepeline
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Job to run'
+        required: true
+        default: 'destroy'
+jobs:
+  pylint:
+    name: Pylint code check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install flake8
+        run: pip install flake8
+      - name: Linting
+        run: flake8 --max-line-length=100
+  codeql:
+    name: CodeQL code analysis
+    needs: pylint
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: python
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+  build:
+    name: Docker image build & push
+    needs: codeql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Login to DockerHub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/codiv-app:latest ./app/
+      - name: Push image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/codiv-app:latest
+  tfsec:
+    name: Run tfsec sarif report
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Run tfsec
+        uses: tfsec/tfsec-sarif-action@9a83b5c3524f825c020e356335855741fd02745f
+        with:
+          sarif_file: tfsec.sarif         
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: tfsec.sarif
+  terraform:
+    name: IaC
+    needs: tfsec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Terraform init
+        run: echo "Terraform init"
+      - name: Terraform validate
+        run: echo "Terraform validate"
+      - name: Terraform plan
+        run: echo "Terraform plan"
+      - name: Terraform apply
+        run: echo "Terraform apply"
+      - name: Terraform destroy
+        run: echo "Terraform destroy"
+  deploy:
+    name: Deploy project
+    needs: 
+      - terraform
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do what?
+        run: echo "Idk what i need to do"
+  destroy:
+    name: Destroy project
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.job == 'destroy'}}
+    steps:
+      - name: ${{ github.event.inputs.job }} - step 1
+        run: echo "${{ github.event.inputs.job }} triggered!"
+      

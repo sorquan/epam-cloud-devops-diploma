@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css" rel="stylesheet" />
+<link rel="shortcut icon" href="//cdn.keycdn.com/favicon.ico">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Covid tracker</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">COVID TRACKER</a>
+            <button onclick="window.location.href='/renew';" type="button" class="btn btn-primary">Refresh data</button>
+        </div>
+    </nav>
+    <main class="d-flex justify-content-center">
+        <div>
+            <table class="table w-auto table-bordered table-sm table-hover sortable">
+                <thead class="table-dark">
+                    <tr>
+                        <td>Date</td>
+                        <td>Country</td>
+                        <td>Confirmed</td>
+                        <td>Deaths</td>
+                        <td>Stringency actual</td>
+                        <td>Stringency</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%- for line in data %}
+                    <tr>
+                        <td>{{ line[1] }}</td>
+                        <td>{{ line[2] }}</td>
+                        <td>{{ line[3] }}</td>
+                        <td>{{ line[4] }}</td>
+                        <td>{{ line[5] }}</td>
+                        <td>{{ line[6] }}</td>
+                    </tr>
+                    {%- endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+
+</html>
